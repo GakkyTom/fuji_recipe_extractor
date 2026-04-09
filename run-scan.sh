@@ -39,8 +39,19 @@ if [[ ! -x /usr/local/bin/exiftool ]]; then
   exit 1
 fi
 
-python3 -m fuji_recipe_extractor \
-  scan \
-  --input "$INPUT_DIR" \
-  --output "$OUTPUT_DIR" \
-  "${EXTRA_ARGS[@]}"
+CMD=(
+  python3
+  -m
+  fuji_recipe_extractor
+  scan
+  --input
+  "$INPUT_DIR"
+  --output
+  "$OUTPUT_DIR"
+)
+
+if [[ ${#EXTRA_ARGS[@]} -gt 0 ]]; then
+  CMD+=("${EXTRA_ARGS[@]}")
+fi
+
+"${CMD[@]}"

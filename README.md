@@ -27,3 +27,26 @@ If you want to call the CLI directly:
 ```bash
 python3 -m fuji_recipe_extractor scan --input /path/to/input --output /path/to/output --copy-by recipe --verbose
 ```
+
+## macOS App
+
+A native macOS app is also included under [macos-app/Sources](/Users/itagakitomoya/Documents/fuji_recipe_extractor/macos-app/Sources). It uses `exiftool` directly and does not depend on the Python CLI at runtime.
+
+Build the app bundle with:
+
+```bash
+./scripts/build-macos-app.sh
+```
+
+The built app will be created at:
+
+```bash
+./dist/Fuji Recipe Extractor.app
+```
+
+From the app UI you can:
+
+- choose the input and output folders
+- choose copy mode: none, recipe, or film
+- enable dry-run and verbose logging
+- run the scan and view logs in-app

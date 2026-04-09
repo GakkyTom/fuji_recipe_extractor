@@ -1,4 +1,6 @@
 /.gradle/
 /.run-cache/
+/.build/
+/dist/
 /build/
 /out/
