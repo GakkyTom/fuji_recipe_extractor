@@ -29,6 +29,7 @@ struct ScanConfiguration {
 struct ExifToolRecord: Decodable {
     let sourceFile: String?
     let filmMode: String?
+    let cameraProfile: String?
     let dynamicRange: String?
     let developmentDynamicRange: String?
     let highlightTone: String?
@@ -49,6 +50,7 @@ struct ExifToolRecord: Decodable {
     enum CodingKeys: String, CodingKey {
         case sourceFile = "SourceFile"
         case filmMode = "FilmMode"
+        case cameraProfile = "CameraProfile"
         case dynamicRange = "DynamicRange"
         case developmentDynamicRange = "DevelopmentDynamicRange"
         case highlightTone = "HighlightTone"
@@ -72,6 +74,7 @@ struct ExifToolRecord: Decodable {
 
         sourceFile = container.decodeFlexibleString(forKey: .sourceFile)
         filmMode = container.decodeFlexibleString(forKey: .filmMode)
+        cameraProfile = container.decodeFlexibleString(forKey: .cameraProfile)
         dynamicRange = container.decodeFlexibleString(forKey: .dynamicRange)
         developmentDynamicRange = container.decodeFlexibleString(forKey: .developmentDynamicRange)
         highlightTone = container.decodeFlexibleString(forKey: .highlightTone)
@@ -158,7 +161,7 @@ func buildPhotoRecipe(from record: ExifToolRecord) -> PhotoRecipe {
         sourceFileName: fileName,
         sourcePath: sourcePath,
         title: title,
-        film: normalized(record.filmMode),
+        film: normalizeFilm(filmMode: record.filmMode, cameraProfile: record.cameraProfile),
         dynamicRange: normalizeDynamicRange(dynamicRange: record.dynamicRange, developmentDynamicRange: record.developmentDynamicRange),
         highlight: normalizeTone(record.highlightTone),
         shadow: normalizeTone(record.shadowTone),
@@ -192,6 +195,26 @@ func normalizeDynamicRange(dynamicRange: String?, developmentDynamicRange: Strin
     case "400": return "DR400"
     default: return value
     }
+}
+
+func normalizeFilm(filmMode: String?, cameraProfile: String?) -> String {
+    let filmModeValue = normalized(filmMode)
+    if filmModeValue != unknownValue {
+        return filmModeValue
+    }
+
+    let cameraProfileValue = normalized(cameraProfile)
+    if cameraProfileValue == unknownValue {
+        return unknownValue
+    }
+
+    let stripped = cameraProfileValue.replacingOccurrences(
+        of: #"^Camera\s+"#,
+        with: "",
+        options: [.regularExpression, .caseInsensitive]
+    ).trimmingCharacters(in: .whitespacesAndNewlines)
+
+    return stripped.isEmpty ? unknownValue : stripped
 }
 
 func normalizeTone(_ value: String?) -> String {

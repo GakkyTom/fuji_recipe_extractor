@@ -12,6 +12,7 @@ UNKNOWN = "Unknown"
 class ExifRecord:
     source_file: str | None = None
     film_mode: str | None = None
+    camera_profile: str | None = None
     dynamic_range: str | None = None
     development_dynamic_range: str | None = None
     highlight_tone: str | None = None
@@ -40,6 +41,7 @@ class ExifRecord:
         return cls(
             source_file=get_value("SourceFile"),
             film_mode=get_value("FilmMode"),
+            camera_profile=get_value("CameraProfile"),
             dynamic_range=get_value("DynamicRange"),
             development_dynamic_range=get_value("DevelopmentDynamicRange"),
             highlight_tone=get_value("HighlightTone"),
@@ -98,7 +100,7 @@ def build_photo_recipe(record: ExifRecord) -> PhotoRecipe:
         source_file_name=source_name,
         source_path=source_path,
         title=title,
-        film=_or_unknown(record.film_mode),
+        film=_normalize_film(record.film_mode, record.camera_profile),
         dynamic_range=_normalize_dynamic_range(record.dynamic_range, record.development_dynamic_range),
         highlight=_normalize_tone(record.highlight_tone),
         shadow=_normalize_tone(record.shadow_tone),
@@ -137,6 +139,18 @@ def _normalize_dynamic_range(dynamic_range: str | None, development_dynamic_rang
         if mapped:
             return mapped
     return value
+
+
+def _normalize_film(film_mode: str | None, camera_profile: str | None) -> str:
+    normalized_film_mode = _or_unknown(film_mode)
+    if normalized_film_mode != UNKNOWN:
+        return normalized_film_mode
+
+    normalized_camera_profile = _or_unknown(camera_profile)
+    if normalized_camera_profile == UNKNOWN:
+        return UNKNOWN
+
+    return re.sub(r"^Camera\s+", "", normalized_camera_profile, flags=re.IGNORECASE).strip() or UNKNOWN
 
 
 def _normalize_tone(value: str | None) -> str:
