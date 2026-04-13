@@ -31,6 +31,7 @@ class ExifToolClient:
             self.exiftool_path,
             "-j",
             "-FilmMode",
+            "-CameraProfile",
             "-DynamicRange",
             "-DevelopmentDynamicRange",
             "-HighlightTone",

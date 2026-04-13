@@ -63,6 +63,7 @@ actor RecipeScanner {
         process.arguments = [
             "-j",
             "-FilmMode",
+            "-CameraProfile",
             "-DynamicRange",
             "-DevelopmentDynamicRange",
             "-HighlightTone",
