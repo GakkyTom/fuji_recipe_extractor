@@ -31,6 +31,7 @@ python3 -m fuji_recipe_extractor scan --input /path/to/input --output /path/to/o
 ## macOS App
 
 A native macOS app is also included under [macos-app/Sources](/Users/itagakitomoya/Documents/fuji_recipe_extractor/macos-app/Sources). It uses `exiftool` directly and does not depend on the Python CLI at runtime.
+A bundled app icon is copied from the asset export set under [Untitled Exports](/Users/itagakitomoya/Documents/fuji_recipe_extractor/macos-app/Assets/Untitled%20Exports) during the build and applied to the app bundle.
 
 Build the app bundle with:
 

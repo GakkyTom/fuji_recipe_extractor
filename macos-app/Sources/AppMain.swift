@@ -4,6 +4,13 @@ import SwiftUI
 struct FujiRecipeExtractorMacApp: App {
     @StateObject private var viewModel = AppViewModel()
 
+    init() {
+        if let iconURL = Bundle.main.url(forResource: "AppIcon", withExtension: "png"),
+           let image = NSImage(contentsOf: iconURL) {
+            NSApplication.shared.applicationIconImage = image
+        }
+    }
+
     var body: some Scene {
         WindowGroup("Fuji Recipe Extractor") {
             ContentView(viewModel: viewModel)
