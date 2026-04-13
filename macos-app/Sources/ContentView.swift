@@ -181,6 +181,7 @@ struct PhotoRecipeRow: View {
                     .lineLimit(1)
 
                 recipeLine("Film", photo.film)
+                recipeLine("Source", photo.sourceType)
                 recipeLine("DR", photo.dynamicRange)
                 recipeLine("WB", photo.whiteBalance)
                 recipeLine("ISO", photo.iso)
