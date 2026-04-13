@@ -98,6 +98,7 @@ struct PhotoRecipe {
     let sourceFileName: String
     let sourcePath: String
     let title: String
+    let sourceType: String
     let film: String
     let dynamicRange: String
     let highlight: String
@@ -161,6 +162,7 @@ func buildPhotoRecipe(from record: ExifToolRecord) -> PhotoRecipe {
         sourceFileName: fileName,
         sourcePath: sourcePath,
         title: title,
+        sourceType: normalizeSourceType(cameraProfile: record.cameraProfile),
         film: normalizeFilm(filmMode: record.filmMode, cameraProfile: record.cameraProfile),
         dynamicRange: normalizeDynamicRange(dynamicRange: record.dynamicRange, developmentDynamicRange: record.developmentDynamicRange),
         highlight: normalizeTone(record.highlightTone),
@@ -197,6 +199,17 @@ func normalizeDynamicRange(dynamicRange: String?, developmentDynamicRange: Strin
     }
 }
 
+func normalizeSourceType(cameraProfile: String?) -> String {
+    let cameraProfileValue = normalized(cameraProfile)
+    if cameraProfileValue.lowercased() == "embedded" {
+        return "Camera JPEG"
+    }
+    if cameraProfileValue != unknownValue {
+        return "Lightroom RAW"
+    }
+    return "Camera JPEG"
+}
+
 func normalizeFilm(filmMode: String?, cameraProfile: String?) -> String {
     let filmModeValue = normalized(filmMode)
     if filmModeValue != unknownValue {
@@ -204,7 +217,7 @@ func normalizeFilm(filmMode: String?, cameraProfile: String?) -> String {
     }
 
     let cameraProfileValue = normalized(cameraProfile)
-    if cameraProfileValue == unknownValue {
+    if cameraProfileValue == unknownValue || cameraProfileValue.lowercased() == "embedded" {
         return unknownValue
     }
 

@@ -66,6 +66,7 @@ class PhotoRecipe:
     source_file_name: str
     source_path: str
     title: str
+    source_type: str
     film: str
     dynamic_range: str
     highlight: str
@@ -100,6 +101,7 @@ def build_photo_recipe(record: ExifRecord) -> PhotoRecipe:
         source_file_name=source_name,
         source_path=source_path,
         title=title,
+        source_type=_normalize_source_type(record.camera_profile),
         film=_normalize_film(record.film_mode, record.camera_profile),
         dynamic_range=_normalize_dynamic_range(record.dynamic_range, record.development_dynamic_range),
         highlight=_normalize_tone(record.highlight_tone),
@@ -141,13 +143,22 @@ def _normalize_dynamic_range(dynamic_range: str | None, development_dynamic_rang
     return value
 
 
+def _normalize_source_type(camera_profile: str | None) -> str:
+    camera_profile_value = _or_unknown(camera_profile)
+    if camera_profile_value.lower() == "embedded":
+        return "Camera JPEG"
+    if camera_profile_value != UNKNOWN:
+        return "Lightroom RAW"
+    return "Camera JPEG"
+
+
 def _normalize_film(film_mode: str | None, camera_profile: str | None) -> str:
     normalized_film_mode = _or_unknown(film_mode)
     if normalized_film_mode != UNKNOWN:
         return normalized_film_mode
 
     normalized_camera_profile = _or_unknown(camera_profile)
-    if normalized_camera_profile == UNKNOWN:
+    if normalized_camera_profile == UNKNOWN or normalized_camera_profile.lower() == "embedded":
         return UNKNOWN
 
     return re.sub(r"^Camera\s+", "", normalized_camera_profile, flags=re.IGNORECASE).strip() or UNKNOWN
