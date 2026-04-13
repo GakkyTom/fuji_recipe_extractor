@@ -18,6 +18,34 @@ enum CopyMode: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+enum ResultSortField: String, CaseIterable, Identifiable {
+    case film
+    case source
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .film: return "Film"
+        case .source: return "Source"
+        }
+    }
+}
+
+enum SortOrderOption: String, CaseIterable, Identifiable {
+    case ascending
+    case descending
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .ascending: return "Ascending"
+        case .descending: return "Descending"
+        }
+    }
+}
+
 struct ScanConfiguration {
     let inputDirectory: URL
     let outputDirectory: URL
