@@ -105,8 +105,42 @@ struct ContentView: View {
                         Text("Results")
                             .font(.headline)
                         Spacer()
-                        Text("\(viewModel.scannedPhotos.count) items")
+                        Text("\(viewModel.filteredAndSortedPhotos.count) / \(viewModel.scannedPhotos.count) items")
                             .foregroundStyle(.secondary)
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 12) {
+                            Picker("Film", selection: $viewModel.selectedFilmFilter) {
+                                ForEach(viewModel.filmFilterOptions, id: \.self) { option in
+                                    Text(option).tag(option)
+                                }
+                            }
+                            .pickerStyle(.menu)
+
+                            Picker("Source", selection: $viewModel.selectedSourceFilter) {
+                                ForEach(viewModel.sourceFilterOptions, id: \.self) { option in
+                                    Text(option).tag(option)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                        }
+
+                        HStack(spacing: 12) {
+                            Picker("Sort By", selection: $viewModel.sortField) {
+                                ForEach(ResultSortField.allCases) { field in
+                                    Text(field.label).tag(field)
+                                }
+                            }
+                            .pickerStyle(.menu)
+
+                            Picker("Order", selection: $viewModel.sortOrder) {
+                                ForEach(SortOrderOption.allCases) { order in
+                                    Text(order.label).tag(order)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                        }
                     }
 
                     if viewModel.scannedPhotos.isEmpty {
@@ -120,10 +154,21 @@ struct ContentView: View {
                                 .foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if viewModel.filteredAndSortedPhotos.isEmpty {
+                        VStack(spacing: 10) {
+                            Image(systemName: "line.3.horizontal.decrease.circle")
+                                .font(.system(size: 28))
+                                .foregroundStyle(.secondary)
+                            Text("No Matching Results")
+                                .font(.headline)
+                            Text("フィルタ条件に一致する結果がありません。")
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         ScrollView {
                             LazyVStack(alignment: .leading, spacing: 12) {
-                                ForEach(viewModel.scannedPhotos, id: \.id) { photo in
+                                ForEach(viewModel.filteredAndSortedPhotos, id: \.id) { photo in
                                     PhotoRecipeRow(photo: photo)
                                 }
                             }
@@ -236,6 +281,8 @@ struct PhotoThumbnail: View {
 
 @MainActor
 final class AppViewModel: ObservableObject {
+    static let allFilterLabel = "All"
+
     @Published var inputFolderPath: String = ""
     @Published var outputFolderPath: String = ""
     @Published var copyMode: CopyMode = .none
@@ -245,6 +292,10 @@ final class AppViewModel: ObservableObject {
     @Published var statusMessage = "Input と Output を選んでから実行してください。"
     @Published var logText = ""
     @Published var scannedPhotos: [PhotoRecipe] = []
+    @Published var selectedFilmFilter = AppViewModel.allFilterLabel
+    @Published var selectedSourceFilter = AppViewModel.allFilterLabel
+    @Published var sortField: ResultSortField = .film
+    @Published var sortOrder: SortOrderOption = .ascending
     @Published var showingError = false
     @Published var errorMessage = ""
 
@@ -266,6 +317,43 @@ final class AppViewModel: ObservableObject {
         logText = ""
     }
 
+    var filmFilterOptions: [String] {
+        [Self.allFilterLabel] + Array(Set(scannedPhotos.map(\.film))).sorted()
+    }
+
+    var sourceFilterOptions: [String] {
+        [Self.allFilterLabel] + Array(Set(scannedPhotos.map(\.sourceType))).sorted()
+    }
+
+    var filteredAndSortedPhotos: [PhotoRecipe] {
+        let filtered = scannedPhotos.filter { photo in
+            let filmMatches = selectedFilmFilter == Self.allFilterLabel || photo.film == selectedFilmFilter
+            let sourceMatches = selectedSourceFilter == Self.allFilterLabel || photo.sourceType == selectedSourceFilter
+            return filmMatches && sourceMatches
+        }
+
+        let sorted = filtered.sorted { lhs, rhs in
+            let primaryComparison: ComparisonResult
+            switch sortField {
+            case .film:
+                primaryComparison = lhs.film.localizedCaseInsensitiveCompare(rhs.film)
+            case .source:
+                primaryComparison = lhs.sourceType.localizedCaseInsensitiveCompare(rhs.sourceType)
+            }
+
+            if primaryComparison == .orderedSame {
+                return lhs.title.localizedCaseInsensitiveCompare(rhs.title) == .orderedAscending
+            }
+
+            if sortOrder == .ascending {
+                return primaryComparison == .orderedAscending
+            }
+            return primaryComparison == .orderedDescending
+        }
+
+        return sorted
+    }
+
     func startScan() {
         guard !inputFolderPath.isEmpty, !outputFolderPath.isEmpty else {
             statusMessage = "Input と Output を選んでください。"
@@ -285,6 +373,8 @@ final class AppViewModel: ObservableObject {
         isRunning = true
         statusMessage = "Scanning..."
         scannedPhotos = []
+        selectedFilmFilter = Self.allFilterLabel
+        selectedSourceFilter = Self.allFilterLabel
         appendLog("Starting scan")
 
         Task {
