@@ -110,6 +110,10 @@ struct PhotoRecipe {
     let iso: String
     let exposureCompensation: String
 
+    var id: String {
+        sourcePath
+    }
+
     var recipeKey: String {
         "\(normalizeToken(film))_\(normalizeToken(dynamicRange))"
     }
@@ -117,6 +121,11 @@ struct PhotoRecipe {
     var filmKey: String {
         normalizeToken(film)
     }
+}
+
+struct ScanResult {
+    let photos: [PhotoRecipe]
+    let summary: String
 }
 
 enum AppError: LocalizedError {

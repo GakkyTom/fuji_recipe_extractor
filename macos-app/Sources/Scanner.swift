@@ -3,7 +3,7 @@ import Foundation
 actor RecipeScanner {
     private let exifToolPath = "/usr/local/bin/exiftool"
 
-    func scan(configuration: ScanConfiguration, logger: @escaping (String) async -> Void) async throws -> String {
+    func scan(configuration: ScanConfiguration, logger: @escaping (String) async -> Void) async throws -> ScanResult {
         let inputDirectory = configuration.inputDirectory
 
         var isDirectory: ObjCBool = false
@@ -18,7 +18,10 @@ actor RecipeScanner {
 
         let files = jpegFiles(in: inputDirectory)
         if files.isEmpty {
-            return "No JPEG files found in \(inputDirectory.path(percentEncoded: false))"
+            return ScanResult(
+                photos: [],
+                summary: "No JPEG files found in \(inputDirectory.path(percentEncoded: false))"
+            )
         }
 
         if configuration.verbose {
@@ -30,7 +33,10 @@ actor RecipeScanner {
         try await writeOutput(photos: photos, configuration: configuration, logger: logger)
 
         let prefix = configuration.dryRun ? "Dry run completed" : "Scan completed"
-        return "\(prefix): \(photos.count) file(s) processed"
+        return ScanResult(
+            photos: photos,
+            summary: "\(prefix): \(photos.count) file(s) processed"
+        )
     }
 
     private func jpegFiles(in directory: URL) -> [URL] {
